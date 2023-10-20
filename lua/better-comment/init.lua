@@ -80,23 +80,40 @@ M.Setup = function(config)
             Create_hl(opts.tags)
 
             for id, comment in ipairs(comments) do
-                for hl_id, hl in ipairs(opts.tags) do
-                    if string.find(comment.text, hl.name) then
-                        if hl.virtual_text ~= "" then
-                            local ns_id = vim.api.nvim_create_namespace(hl.name)
-                            local v_opts = {
-                                id = id,
-                                virt_text = { { hl.virtual_text, "" } },
-                                virt_text_pos = 'overlay',
-                                virt_text_win_col = comment.finish + 2,
-                            }
-                            api.nvim_buf_set_extmark(current_buffer, ns_id, comment.line, comment.line, v_opts)
-                        end
+                local current_line = 0
+                local current_column = comment.col_start
+                for comment_line in string.gmatch(comment.text, "([^\n]*)\n?") do
+                    for hl_id, hl in ipairs(opts.tags) do
+                        if string.find(comment_line, hl.name) then
+                            if hl.virtual_text ~= "" then
+                                local ns_id = vim.api.nvim_create_namespace(hl.name)
+                                local v_opts = {
+                                    id = id,
+                                    virt_text = { { hl.virtual_text, "" } },
+                                    virt_text_pos = 'overlay',
+                                    virt_text_win_col = comment.finish + 2,
+                                }
+                                api.nvim_buf_set_extmark(
+                                    current_buffer,
+                                    ns_id,
+                                    comment.line + current_line,
+                                    comment.line + current_line,
+                                    v_opts
+                                )
+                            end
 
-                        vim.api.nvim_buf_add_highlight(current_buffer, 0, tostring(hl_id), comment.line,
-                            comment.col_start,
-                            comment.finish)
+                            vim.api.nvim_buf_add_highlight(
+                                current_buffer,
+                                0,
+                                tostring(hl_id),
+                                comment.line + current_line,
+                                current_column,
+                                #comment_line + current_column
+                            )
+                        end
                     end
+                    current_line = current_line + 1
+                    current_column = 0
                 end
             end
 
