@@ -40,7 +40,7 @@ local opts = {
 
 M.Setup = function(config)
     if config and config.tags then
-        opts.tags = vim.tbl_deep_extend("force", opts.tags, config.tags or {})
+        opts.tags = config.tags
     end
 
     local augroup = vim.api.nvim_create_augroup("better-comments", {clear = true})
